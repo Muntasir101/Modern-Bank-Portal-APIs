@@ -1,6 +1,7 @@
 """
 for Swagger:
 http://127.0.0.1:5000/apidocs/
+https://app.swaggerhub.com/apis/MUNTASIR_2/Modern_Bank_API/1.0.0
 """
 
 from flask import Flask, request, jsonify
