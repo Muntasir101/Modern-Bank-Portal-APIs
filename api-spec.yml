@@ -1,0 +1,689 @@
+openapi: 3.0.0
+info:
+  title: Banking API
+  version: 1.0.0
+  description: API for a simple banking system with manager and customer functionalities.
+  termsOfService: http://example.com/terms
+  contact:
+    name: API Support
+    url: http://example.com/support
+    email: support@example.com
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/MUNTASIR_2/Modern_Bank_API/1.0.0
+  - url: http://127.0.0.1:5000
+    description: Development server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      name: Authorization
+      in: header
+      description: JWT Authorization header using the Bearer scheme. Example Authorization Bearer token
+
+tags:
+  - name: Manager Authentication
+    description: Endpoints for manager registration and login.
+  - name: Manager Operations
+    description: Endpoints for manager-specific operations like viewing stats and managing customers.
+  - name: Customer Authentication
+    description: Endpoints for customer registration and login.
+  - name: Customer Account
+    description: Endpoints for customers to manage their accounts (balance, deposit, withdraw, transfer).
+  - name: Customer Transactions
+    description: Endpoints for customers to view and filter their transaction history.
+
+paths:
+  /managers/register/:
+    post:
+      tags:
+        - Manager Authentication
+      summary: Register a new bank manager.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: admin_user
+                password:
+                  type: string
+                  example: securepassword123
+              required:
+                - username
+                - password
+      responses:
+        '201':
+          description: Manager registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '400':
+          description: Username and password are required or Username already exists.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+
+  /managers/login/:
+    post:
+      tags:
+        - Manager Authentication
+      summary: Login for a bank manager.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  example: admin_user
+                password:
+                  type: string
+                  example: securepassword123
+              required:
+                - username
+                - password
+      responses:
+        '200':
+          description: Login successful, returns access token.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+        '400':
+          description: Username and password are required.
+        '401':
+          description: Invalid credentials.
+
+  /managers/stats/:
+    get:
+      tags:
+        - Manager Operations
+      summary: View system-wide statistics.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: System statistics.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_customers:
+                    type: integer
+                  total_transactions:
+                    type: integer
+                  total_balance:
+                    type: number
+                    format: float
+        '401':
+          description: Token is missing or invalid.
+
+  /managers/customers/:
+    get:
+      tags:
+        - Manager Operations
+      summary: List all customers.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of customers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    account_id:
+                      type: integer
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+        '401':
+          description: Token is missing or invalid.
+
+  /managers/customers/search/:
+    get:
+      tags:
+        - Manager Operations
+      summary: Search for customers by name, email, or account ID.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: name
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Part of customer name to search for.
+        - name: email
+          in: query
+          required: false
+          schema:
+            type: string
+            format: email
+          description: Exact customer email to search for.
+        - name: account_id
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Exact customer account ID to search for.
+      responses:
+        '200':
+          description: A list of matching customers.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    account_id:
+                      type: integer
+                    name:
+                      type: string
+                    email:
+                      type: string
+                      format: email
+        '401':
+          description: Token is missing or invalid.
+
+  /managers/customers/{customer_id}/transactions/:
+    get:
+      tags:
+        - Manager Operations
+      summary: View a specific customer's transaction history.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          schema:
+            type: integer
+          description: The ID of the customer whose transactions to view.
+      responses:
+        '200':
+          description: A list of the customer's transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transaction_id:
+                      type: integer
+                    account_id:
+                      type: integer
+                    transaction_type:
+                      type: string
+                      enum: ['deposit', 'withdrawal', 'transfer_in', 'transfer_out']
+                    amount:
+                      type: number
+                      format: float
+                    timestamp:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+        '401':
+          description: Token is missing or invalid.
+
+  /managers/transactions/:
+    get:
+      tags:
+        - Manager Operations
+      summary: View all transactions in the system.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of all transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transaction_id:
+                      type: integer
+                    account_id:
+                      type: integer
+                    transaction_type:
+                      type: string
+                      enum: ['deposit', 'withdrawal', 'transfer_in', 'transfer_out', 'Initial deposit']
+                    amount:
+                      type: number
+                      format: float
+                    timestamp:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+        '401':
+          description: Token is missing or invalid.
+
+  /managers/logout/:
+    post:
+      tags:
+        - Manager Authentication
+      summary: Logout for a bank manager.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Manager logged out successfully.
+        '401':
+          description: Token is missing or invalid.
+
+  /customers/register/:
+    post:
+      tags:
+        - Customer Authentication
+      summary: Register a new customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: John Doe
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  example: password123
+                initial_deposit:
+                  type: number
+                  format: float
+                  example: 100.50
+                  default: 0.0
+              required:
+                - name
+                - email
+                - password
+      responses:
+        '201':
+          description: Customer registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  account_id:
+                    type: integer
+        '400':
+          description: Required fields missing or email already registered.
+
+  /customers/login/:
+    post:
+      tags:
+        - Customer Authentication
+      summary: Login for a customer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  example: password123
+              required:
+                - email
+                - password
+      responses:
+        '200':
+          description: Login successful, returns access token and account ID.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                  account_id:
+                    type: integer
+        '400':
+          description: Email and password are required.
+        '401':
+          description: Invalid credentials.
+
+  /customers/me/balance/:
+    get:
+      tags:
+        - Customer Account
+      summary: View current account balance.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current account balance.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balance:
+                    type: number
+                    format: float
+        '401':
+          description: Token is missing or invalid.
+        '404':
+          description: Customer not found.
+
+  /customers/me/deposit/:
+    post:
+      tags:
+        - Customer Account
+      summary: Deposit funds into account.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  example: 50.25
+                  description: Amount to deposit, must be positive.
+              required:
+                - amount
+      responses:
+        '200':
+          description: Deposit successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  new_balance:
+                    type: number
+                    format: float
+        '400':
+          description: Invalid deposit amount.
+        '401':
+          description: Token is missing or invalid.
+        '500':
+          description: Database error.
+
+  /customers/me/withdraw/:
+    post:
+      tags:
+        - Customer Account
+      summary: Withdraw funds from account.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: number
+                  format: float
+                  example: 20.00
+                  description: Amount to withdraw, must be positive.
+              required:
+                - amount
+      responses:
+        '200':
+          description: Withdrawal successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  new_balance:
+                    type: number
+                    format: float
+        '400':
+          description: Invalid withdrawal amount or insufficient funds.
+        '401':
+          description: Token is missing or invalid.
+        '500':
+          description: Database error.
+
+  /customers/me/transfer/:
+    post:
+      tags:
+        - Customer Account
+      summary: Transfer funds to another customer account.
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                recipient_account_id:
+                  type: integer
+                  example: 2
+                  description: Account ID of the recipient.
+                amount:
+                  type: number
+                  format: float
+                  example: 25.75
+                  description: Amount to transfer, must be positive.
+              required:
+                - recipient_account_id
+                - amount
+      responses:
+        '200':
+          description: Transfer successful.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  new_balance:
+                    type: number
+                    format: float
+        '400':
+          description: Invalid request (missing fields, invalid amount, transfer to own account, insufficient funds).
+        '401':
+          description: Token is missing or invalid.
+        '404':
+          description: Recipient account not found.
+        '500':
+          description: Database error.
+
+  /customers/me/transactions/:
+    get:
+      tags:
+        - Customer Transactions
+      summary: View own transaction history.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: A list of own transactions, ordered by most recent first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transaction_id:
+                      type: integer
+                    account_id:
+                      type: integer
+                    transaction_type:
+                      type: string
+                    amount:
+                      type: number
+                      format: float
+                    timestamp:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+        '401':
+          description: Token is missing or invalid.
+
+  /customers/me/transactions/filter/:
+    get:
+      tags:
+        - Customer Transactions
+      summary: Filter own transactions by date range and/or type.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: start_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: Start date for filtering (YYYY-MM-DD).
+        - name: end_date
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date
+          description: End date for filtering (YYYY-MM-DD). Add T23:59:59 for full day.
+        - name: transaction_type
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: ['deposit', 'withdrawal', 'transfer_in', 'transfer_out', 'Initial deposit']
+          description: Type of transaction to filter by.
+      responses:
+        '200':
+          description: A list of filtered transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transaction_id:
+                      type: integer
+                    account_id:
+                      type: integer
+                    transaction_type:
+                      type: string
+                    amount:
+                      type: number
+                      format: float
+                    timestamp:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+        '401':
+          description: Token is missing or invalid.
+
+  /customers/me/transactions/search/:
+    get:
+      tags:
+        - Customer Transactions
+      summary: Search own transactions by description.
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: description
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Text to search for in transaction descriptions (case-insensitive).
+      responses:
+        '200':
+          description: A list of matching transactions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    transaction_id:
+                      type: integer
+                    account_id:
+                      type: integer
+                    transaction_type:
+                      type: string
+                    amount:
+                      type: number
+                      format: float
+                    timestamp:
+                      type: string
+                      format: date-time
+                    description:
+                      type: string
+        '401':
+          description: Token is missing or invalid.
+
+  /customers/logout/:
+    post:
+      tags:
+        - Customer Authentication
+      summary: Logout for a customer.
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Customer logged out successfully.
+        '401':
+          description: Token is missing or invalid.

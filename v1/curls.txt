@@ -1,0 +1,124 @@
+ere are the curl commands corresponding to the Flask API endpoints. Remember to replace http://127.0.0.1:5000 (the default Flask development server address) if your setup is different.
+
+Manager Endpoints:
+
+Register as a Manager:
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -d '{"username": "admin", "password": "securepassword"}' http://127.0.0.1:5000/managers/register/
+Login as a Manager:
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -d '{"username": "admin", "password": "securepassword"}' http://127.0.0.1:5000/managers/login/
+(This will return a dummy access_token in the JSON response.)
+
+View System Statistics (Overview tab):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" http://127.0.0.1:5000/managers/stats/
+(Replace dummy_manager_token_admin with the actual token you get from the login.)
+
+View a list of all registered customers:
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" http://127.0.0.1:5000/managers/customers/
+Search/filter the customer list by name:
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" "http://127.0.0.1:5000/managers/customers/search/?name=Alice"
+Search/filter the customer list by email:
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" "http://127.0.0.1:5000/managers/customers/search/?email=alice.smith@example.com"
+Search/filter the customer list by Account ID:
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" "http://127.0.0.1:5000/managers/customers/search/?account_id=1"
+Select a customer from the list to view their detailed transaction history (assuming customer ID is 1):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" http://127.0.0.1:5000/managers/customers/1/transactions/
+View a comprehensive list of all transactions made by all customers:
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_manager_token_admin" http://127.0.0.1:5000/managers/transactions/
+Logout:
+
+Bash
+
+curl -X POST -H "Authorization: Bearer dummy_manager_token_admin" http://127.0.0.1:5000/managers/logout/
+Customer Endpoints:
+
+Register as a Customer (including an initial deposit):
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -d '{"name": "Bob Williams", "email": "bob.williams@example.com", "password": "securepass123", "initial_deposit": 150.00}' http://127.0.0.1:5000/customers/register/
+(This will return the new account_id in the JSON response.)
+
+Login as a Customer (assuming Bob's account ID is 2):
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -d '{"email": "bob.williams@example.com", "password": "securepass123"}' http://127.0.0.1:5000/customers/login/
+(This will return a dummy access_token and the account_id in the JSON response.)
+
+View their account balance (assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" http://127.0.0.1:5000/customers/me/balance/
+(Replace dummy_customer_token_2 with the actual token.)
+
+Deposit funds into their account (assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer dummy_customer_token_2" -d '{"amount": 75.00}' http://127.0.0.1:5000/customers/me/deposit/
+Withdraw funds from their account (up to the available balance, assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer dummy_customer_token_2" -d '{"amount": 40.00}' http://127.0.0.1:5000/customers/me/withdraw/
+Transfer funds to another customer's account (assuming the logged-in customer's account ID is 2 and the recipient's account ID is 1):
+
+Bash
+
+curl -X POST -H "Content-Type: application/json" -H "Authorization: Bearer dummy_customer_token_2" -d '{"recipient_account_id": 1, "amount": 25.00}' http://127.0.0.1:5000/customers/me/transfer/
+View their transaction history (statement, assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" http://127.0.0.1:5000/customers/me/transactions/
+Filter their transaction statement by date range (e.g., transactions after May 16, 2025, assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" "http://127.0.0.1:5000/customers/me/transactions/filter/?start_date=2025-05-16T00:00:00"
+(You can also add &end_date=YYYY-MM-DDTHH:MM:SS and &transaction_type=deposit or other transaction types.)
+
+Search their transaction statement by description (assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" "http://127.0.0.1:5000/customers/me/transactions/search/?description=transfer"
+Logout (assuming the logged-in customer's account ID is 2):
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" "http://127.0.0.1:5000/customers/me/transactions/search/?description=withdraw"
+Logout (assuming the logged-in customer's account ID is 2):
+
+curl -X GET -H "Authorization: Bearer dummy_customer_token_2" "http://127.0.0.1:5000/customers/me/transactions/search/?description=deposit"
+Logout (assuming the logged-in customer's account ID is 2):
+
+Bash
+
+curl -X POST -H "Authorization: Bearer dummy_customer_token_2" http://127.0.0.1:5000/customers/logout/
